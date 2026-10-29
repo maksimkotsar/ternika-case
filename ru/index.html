@@ -233,6 +233,45 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .rv{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.bars i{transition:none}html{scroll-behavior:auto}}
+
+/* section menu */
+.nav{display:flex;gap:2px;margin-left:auto}
+.nav a{padding:8px 12px;border-radius:999px;font-size:14.5px;font-weight:700;color:var(--muted);text-decoration:none;white-space:nowrap;transition:color .2s,background .2s}
+.nav a:hover{color:var(--ink)}
+.nav a.on{color:var(--ink);background:var(--paper)}
+.burger{display:none;width:44px;height:44px;border:0;border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;align-items:center;justify-content:center;flex:none}
+.burger i,.burger i::before,.burger i::after{display:block;width:18px;height:2px;border-radius:1px;background:currentColor;position:relative;transition:transform .25s,background .25s}
+.burger i::before,.burger i::after{content:"";position:absolute;left:0}
+.burger i::before{top:-6px}.burger i::after{top:6px}
+.bar.open .burger i{background:transparent}
+.bar.open .burger i::before{transform:translateY(6px) rotate(45deg)}
+.bar.open .burger i::after{transform:translateY(-6px) rotate(-45deg)}
+.menu{display:none}
+.progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--wine);transform-origin:0 50%;transform:scaleX(0)}
+.bar{position:sticky}
+@media (max-width:1280px){.name-ph em{display:none}}
+@media (max-width:1060px){
+  .nav{display:none}
+  .burger{display:inline-flex}
+  .menu{display:block;position:absolute;left:0;right:0;top:100%;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:8px var(--gut) 20px;box-shadow:0 24px 40px -24px rgba(47,49,31,.35);
+    opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .2s,transform .2s,visibility .2s}
+  .bar.open .menu{opacity:1;visibility:visible;transform:none}
+  .menu small{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+  .menu a{display:flex;justify-content:space-between;padding:14px 0;border-top:1px solid var(--line);font-size:19px;font-weight:700;text-decoration:none}
+  .menu a.on{color:var(--wine)}
+  .menu a::after{content:"→";color:var(--olive)}
+  .menu .btn{margin-top:14px;border-top:0;justify-content:center;width:100%;font-size:16px;padding:15px}
+  .menu .btn::after{content:none}
+}
+@media (max-width:400px){.burger{width:40px;height:40px}}
+/* tags are labels, not buttons: dot + text, no pill */
+.tag{background:none !important;padding:0 !important;border-radius:0 !important;gap:7px;font-size:11.5px;letter-spacing:.12em}
+.tag::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.t-trust{color:var(--forest) !important}
+.t-want{color:var(--olive) !important}
+.t-buy{color:var(--wine) !important}
+.cap h3 .tags{gap:14px !important}
 </style>
 </head>
 <body>
@@ -240,10 +279,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <header class="bar">
   <div class="wrap">
     <span class="name-ph"><img src="assets/img/maksim-avatar.webp" alt="" width="30" height="30">Максим Коцарь<em> · дизайн сайтов для застройщиков</em></span>
+    <nav class="nav" aria-label="Разделы"><a href="#task">Задача</a><a href="#process">Процесс</a><a href="#decisions">Решения</a><a href="#design">Дизайн</a><a href="#result">Результат</a><a href="#review">Отзыв</a></nav>
     <div class="bar-r">
       <a class="btn" href="#contact">Написать мне</a>
+      <button class="burger" type="button" aria-expanded="false" aria-controls="menu" aria-label="Открыть меню" data-open="Открыть меню" data-close="Закрыть меню"><i></i></button>
     </div>
   </div>
+  <nav class="menu" id="menu" aria-label="Разделы"><small>Разделы</small><a href="#task">Задача</a><a href="#process">Процесс</a><a href="#decisions">Решения</a><a href="#design">Дизайн</a><a href="#result">Результат</a><a href="#review">Отзыв</a><a class="btn" href="#contact">Написать мне</a></nav>
+  <div class="progress" aria-hidden="true"></div>
 </header>
 
 <main>
@@ -594,6 +637,25 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
   }), { rootMargin: '0px 0px -8% 0px' });
   document.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+
+  // section menu: active item, scroll progress, mobile burger
+  const bar = document.querySelector('.bar'), burger = bar.querySelector('.burger'), prog = bar.querySelector('.progress');
+  const links = [...bar.querySelectorAll('.nav a, .menu a[href^="#"]')];
+  const secs = [...new Set(links.map(a => a.getAttribute('href')))].map(h => document.querySelector(h)).filter(Boolean);
+  const setOpen = o => { bar.classList.toggle('open', o); burger.setAttribute('aria-expanded', o); burger.setAttribute('aria-label', o ? burger.dataset.close : burger.dataset.open); };
+  burger.addEventListener('click', () => setOpen(!bar.classList.contains('open')));
+  links.forEach(a => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+  document.addEventListener('click', e => { if (!bar.contains(e.target)) setOpen(false); });
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    prog.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+    let cur = null;
+    secs.forEach(s => { if (s.getBoundingClientRect().top < innerHeight * .35) cur = '#' + s.id; });
+    links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === cur));
+  };
+  addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll); onScroll();
 
   // videos load only near the viewport and pause off-screen
   const vio = new IntersectionObserver(es => es.forEach(e => {
